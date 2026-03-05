@@ -1,14 +1,21 @@
 // src/controllers/contact.controller.js
 import prisma from '../config/prisma.js';
 import nodemailer from 'nodemailer';
+import dns from 'dns';
 import { ContactSchema } from '../schemas/Validator.js';
 
+// Force IPv4 — Render Free bloque IPv6
+dns.setDefaultResultOrder('ipv4first');
+
 const transporter = nodemailer.createTransport({
-  service: 'gmail',
+  host: 'smtp.gmail.com',
+  port: 587,
+  secure: false,
   auth: {
     user: process.env.MAIL_USER,
     pass: process.env.MAIL_PASS,
   },
+  family: 4,
 });
 
 export const submitContact = async (c) => {
@@ -20,8 +27,8 @@ export const submitContact = async (c) => {
     // 1. Enregistre en base
     const contact = await prisma.contact.create({ data: parsed.data });
 
-    // 2. Envoie l'email
-    await transporter.sendMail({
+    // 2. Envoie l'email — ne bloque pas si ça échoue
+    transporter.sendMail({
       from: `"Portfolio Contact" <${process.env.MAIL_USER}>`,
       to: process.env.MAIL_USER,
       replyTo: parsed.data.email,
@@ -52,7 +59,7 @@ export const submitContact = async (c) => {
           </p>
         </div>
       `,
-    });
+    }).catch(err => console.error('Email error:', err.message));
 
     return c.json({ success: true, data: contact, message: 'Message sent successfully!' }, 201);
   } catch (err) {
