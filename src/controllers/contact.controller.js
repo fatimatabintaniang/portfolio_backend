@@ -1,13 +1,9 @@
 // src/controllers/contact.controller.js
 import prisma from '../config/prisma.js';
 import nodemailer from 'nodemailer';
-import dns from 'dns';
 import { ContactSchema } from '../schemas/Validator.js';
 
-// Force IPv4 — Render Free bloque IPv6
-dns.setDefaultResultOrder('ipv4first');
-
-const transporter = nodemailer.createTransport({
+export const transporter = nodemailer.createTransport({
   host: 'smtp.gmail.com',
   port: 587,
   secure: false,
@@ -27,7 +23,7 @@ export const submitContact = async (c) => {
     // 1. Enregistre en base
     const contact = await prisma.contact.create({ data: parsed.data });
 
-    // 2. Envoie l'email — ne bloque pas si ça échoue
+    // 2. Envoie l'email sans bloquer la réponse
     transporter.sendMail({
       from: `"Portfolio Contact" <${process.env.MAIL_USER}>`,
       to: process.env.MAIL_USER,
