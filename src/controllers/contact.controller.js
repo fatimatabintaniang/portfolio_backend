@@ -1,18 +1,9 @@
 // src/controllers/contact.controller.js
 import prisma from '../config/prisma.js';
-import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 import { ContactSchema } from '../schemas/Validator.js';
 
-export const transporter = nodemailer.createTransport({
-  host: 'smtp.gmail.com',
-  port: 587,
-  secure: false,
-  auth: {
-    user: process.env.MAIL_USER,
-    pass: process.env.MAIL_PASS,
-  },
-  family: 4,
-});
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 export const submitContact = async (c) => {
   try {
@@ -23,9 +14,9 @@ export const submitContact = async (c) => {
     // 1. Enregistre en base
     const contact = await prisma.contact.create({ data: parsed.data });
 
-    // 2. Envoie l'email sans bloquer la réponse
-    transporter.sendMail({
-      from: `"Portfolio Contact" <${process.env.MAIL_USER}>`,
+    // 2. Envoie l'email
+    resend.emails.send({
+      from: 'Portfolio <onboarding@resend.dev>',
       to: process.env.MAIL_USER,
       replyTo: parsed.data.email,
       subject: `📩 Nouveau message — ${parsed.data.subject || 'Contact Portfolio'}`,
