@@ -1,7 +1,4 @@
 // src/index.js
-import { setDefaultResultOrder } from 'dns';
-setDefaultResultOrder('ipv4first'); // ← tout en premier avant les autres imports
-
 import 'dotenv/config';
 import { serve } from '@hono/node-server';
 import { Hono } from 'hono';
@@ -12,7 +9,6 @@ import { readFileSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import api from './routes/AllRoutes.js';
-import { transporter } from './controllers/contact.controller.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const swaggerSpec = JSON.parse(readFileSync(join(__dirname, 'swagger.json'), 'utf-8'));
@@ -41,16 +37,6 @@ app.get('/openapi.json', (c) => {
   const baseUrl = process.env.BASE_URL || `http://localhost:${PORT}`;
   swaggerSpec.servers = [{ url: baseUrl, description: 'Server' }];
   return c.json(swaggerSpec);
-});
-
-// Route de test SMTP
-app.get('/test-email', async (c) => {
-  try {
-    await transporter.verify();
-    return c.json({ success: true, message: 'SMTP connection OK ✅' });
-  } catch (err) {
-    return c.json({ success: false, error: err.message });
-  }
 });
 
 app.route('/api', api);
