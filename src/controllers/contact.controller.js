@@ -69,3 +69,29 @@ export const submitContact = async (c) => {
     return c.json({ success: false, error: err.message }, 500);
   }
 };
+
+export const getAllContacts = async (c) => {
+  try {
+    const contacts = await prisma.contact.findMany({
+      orderBy: { createdAt: 'desc' },
+    });
+    return c.json({ success: true, data: contacts }, 200);
+  } catch (err) {
+    console.error('getAllContacts error:', err);
+    return c.json({ success: false, error: err.message }, 500);
+  }
+};
+
+export const markContactRead = async (c) => {
+  try {
+    const id = c.req.param('id');
+    const contact = await prisma.contact.update({
+      where: { id },
+      data: { read: true },
+    });
+    return c.json({ success: true, data: contact }, 200);
+  } catch (err) {
+    console.error('markContactRead error:', err);
+    return c.json({ success: false, error: err.message }, 500);
+  }
+};
